@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -11,34 +11,33 @@ import { ConfigService } from "@nestjs/config";
 @Injectable()
 export default class UsersService {
     constructor(
-        @InjectModel('Users') private readonly usersModel: Model<UserDocument>,
-        private readonly jwtService: JwtService,
-        private readonly configService: ConfigService
+        @InjectModel('Users') private usersModel: Model<UserDocument>,
     ) { }
 
     async createUser(user: CreateUserDto): Promise<User> {
         try {
-            //! 4779+format password
-            const hash = await bcrypt.hash(user.password, 10);
-            await bcrypt.compare(user.password, hash);
-            user.password = hash;
-
-            const newUser = new this.usersModel(user);
-            await newUser.save();
-            newUser.set('password', undefined);
+            const newUser = await this.usersModel.create(user);
             return newUser;
         } catch (error) {
             console.log(error);
         }
     }
 
-    public getCookieWithJwtToken(userId: number) {
-        const payload: TokenPayload = {userId}
-        const token = this.jwtService.sign(payload);
-        return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_EXPIRATION_TIME')}`
+    async getByEmail(email: string): Promise<User> {
+        try {
+            const user = await this.usersModel.findOne({
+                where: {
+                    email
+                }
+            })
+            if(user) return user;
+            throw new HttpException('User with this email does not exist', HttpStatus.NOT_FOUND);
+        } catch (error) {
+            console.log(error);
+        }
     }
 }
 
 interface TokenPayload {
-    userId: number;
+    userId: string;
   }
