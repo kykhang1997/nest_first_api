@@ -1,12 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from 'mongoose';
-import * as bcrypt from 'bcrypt';
 
 import { CreateUserDto } from "./dto/createUser.interface";
 import { User, UserDocument } from "./users.schema";
-import { JwtService } from "@nestjs/jwt";
-import { ConfigService } from "@nestjs/config";
+import mongoose from "mongoose";
 
 @Injectable()
 export default class UsersService {
@@ -32,6 +30,18 @@ export default class UsersService {
             })
             if(user) return user;
             throw new HttpException('User with this email does not exist', HttpStatus.NOT_FOUND);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async getById(id: mongoose.Schema.Types.ObjectId) {
+        try {
+            const user = await this.usersModel.findById(id);
+            if(user) {
+                return user;
+            }
+            throw new HttpException('User with this id does not exist', HttpStatus.NOT_FOUND);
         } catch (error) {
             console.log(error);
         }

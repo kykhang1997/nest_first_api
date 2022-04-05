@@ -4,20 +4,23 @@ import { ConfigModule } from '@nestjs/config';
 import * as Joi from '@hapi/joi';
 
 import { PostsModule } from './posts/posts.module';
-import { UsersModel } from './users/users.module';
+import { UserModule } from './users/users.module';
+import { AuthenticationModule } from './authentication/authentication.module';
 
 
 @Module({
   imports: [
     MongooseModule.forRoot('mongodb+srv://khangnk:CeJCDHbDNHEdNkwd@nest0.v3olu.mongodb.net/test'),
     ConfigModule.forRoot({
+      isGlobal: true,
       validationSchema: Joi.object({
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRATION_TIME: Joi.string().required(),
       })
     }),
-    UsersModel,
+    UserModule,
     PostsModule,
+    AuthenticationModule
   ],
 
 })
